@@ -1,152 +1,140 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mr_Cats Counter</title>
-  <style>
-    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#60a5fa}
-    *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#071028 0%,#071a2a 100%);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
-    .wrap{width:min(820px,96vw);padding:28px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));box-shadow:0 6px 30px rgba(2,6,23,0.6);color:white}
-    h1{margin:0 0 12px;font-size:20px}
-    p.lead{margin:0 0 18px;color:var(--muted)}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
-    .card{background:rgba(255,255,255,0.02);padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);text-align:center}
-    .label{font-size:13px;color:var(--muted)}
-    .value{font-size:28px;font-weight:700;margin-top:6px}
-    .controls{display:flex;gap:10px;align-items:center}
-    button{background:var(--accent);border:none;padding:10px 14px;border-radius:8px;color:#04233b;font-weight:700;cursor:pointer}
-    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:600}
-    .small{color:var(--muted);font-size:13px;margin-top:10px}
-    footer{margin-top:14px;color:var(--muted);font-size:13px}
-    .notice{background:linear-gradient(90deg, rgba(96,165,250,0.06), rgba(96,165,250,0.02));padding:10px;border-radius:8px;border:1px solid rgba(96,165,250,0.06);color:var(--muted);font-size:13px}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Debug Counter (Visits · Clicks · Total)</title>
+<style>
+  body{font-family:Inter,system-ui,Arial;margin:24px;background:#071426;color:#edf2f7}
+  .card{background:#071830;padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);max-width:900px}
+  .grid{display:flex;gap:12px;margin:12px 0}
+  .box{flex:1;padding:12px;background:rgba(255,255,255,0.01);border-radius:8px;text-align:center}
+  .value{font-weight:700;font-size:28px;margin-top:8px}
+  button{padding:10px 14px;border-radius:8px;border:none;background:#60a5fa;color:#04233b;font-weight:700;cursor:pointer}
+  .sec{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#9aa4b2}
+  .status{margin-top:12px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.02);color:#9aa4b2;font-size:13px}
+  pre{white-space:pre-wrap;color:#cbd5e1}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Page view + Click counter</h1>
-    <p class="lead">This single-file page increments a <strong>visits</strong> counter when the page is requested, a <strong>clicks</strong> counter when the big button is pressed, and a <strong>total</strong> counter whenever either of those actions happen.</p>
+  <div class="card">
+    <h2>Debug Counter (Visits · Clicks · Total)</h2>
+    <p style="color:#9aa4b2;margin:0">This version shows status & HTTP response details to help debug why CountAPI calls fail.</p>
 
-    <div class="grid">
-      <div class="card">
-        <div class="label">Visits (page loads)</div>
-        <div id="visits" class="value">—</div>
-      </div>
-      <div class="card">
-        <div class="label">Clicks (button)</div>
-        <div id="clicks" class="value">—</div>
-      </div>
-      <div class="card">
-        <div class="label">Total (visits + clicks)</div>
-        <div id="total" class="value">—</div>
-      </div>
+    <div class="grid" style="margin-top:14px">
+      <div class="box"><div class="label">Visits</div><div id="visits" class="value">—</div></div>
+      <div class="box"><div class="label">Clicks</div><div id="clicks" class="value">—</div></div>
+      <div class="box"><div class="label">Total</div><div id="total" class="value">—</div></div>
     </div>
 
-    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-      <button id="bigClick">CLICK ME</button>
-      <button id="refresh" class="secondary">Refresh counts</button>
-      <div style="margin-left:auto" class="small">Auto-refresh every 4s</div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button id="big">CLICK ME</button>
+      <button id="ref" class="sec">Refresh</button>
+      <div style="margin-left:auto;color:#9aa4b2">Auto-refresh every 4s</div>
     </div>
 
-    <div class="small" style="margin-top:10px">Share this URL — visits increment on page load. Each click increments the clicks counter. Both actions also increment the total counter so it stays in sync.</div>
-
-    <div style="margin-top:12px" class="notice">How high can it get?</div>
-
-    <footer>Built with CountAPI (<a href="https://countapi.xyz" target="_blank" rel="noopener" style="color:inherit">countapi.xyz</a>) — no server required.</footer>
+    <div class="status" id="status">Status: ready</div>
+    <pre id="console"></pre>
   </div>
 
-  <script>
-    // ===================== CONFIG =====================
-    // Change NAMESPACE to something unique for your site; keys are auto-created the first time they're hit.
-    const NAMESPACE = 'my-unique-namespace'; // e.g. 'my-site-2025'
-    const KEY_VISITS = 'visits';
-    const KEY_CLICKS = 'clicks';
-    const KEY_TOTAL = 'total';
-    const API_BASE = 'https://api.countapi.xyz';
-    // ==================================================
+<script>
+const NAMESPACE = 'my-unique-namespace'; // change this to a unique string
+const KEY_V = 'visits', KEY_C = 'clicks', KEY_T = 'total';
+const API = 'https://api.countapi.xyz';
 
-    const visitsEl = document.getElementById('visits');
-    const clicksEl = document.getElementById('clicks');
-    const totalEl  = document.getElementById('total');
-    const bigBtn   = document.getElementById('bigClick');
-    const refresh  = document.getElementById('refresh');
+const visitsEl = document.getElementById('visits');
+const clicksEl = document.getElementById('clicks');
+const totalEl  = document.getElementById('total');
+const statusEl = document.getElementById('status');
+const consoleEl = document.getElementById('console');
+const bigBtn = document.getElementById('big');
+const refBtn = document.getElementById('ref');
 
-    // Utility: hit an endpoint that increments and returns the new value
-    async function hit(key) {
-      try {
-        const r = await fetch(`${API_BASE}/hit/${encodeURIComponent(NAMESPACE)}/${encodeURIComponent(key)}`);
-        if (!r.ok) throw new Error('network');
-        return await r.json(); // {value: N}
-      } catch (err) {
-        console.error('hit error', err);
-        return null;
-      }
-    }
+function log(msg){
+  console.log(msg);
+  consoleEl.textContent += msg + '\\n';
+  consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+function setStatus(t){ statusEl.textContent = 'Status: ' + t; }
 
-    // Utility: get current value (without increment)
-    async function getVal(key) {
-      try {
-        const r = await fetch(`${API_BASE}/get/${encodeURIComponent(NAMESPACE)}/${encodeURIComponent(key)}`);
-        if (!r.ok) return null;
-        return await r.json(); // {value: N}
-      } catch (err) {
-        console.error('get error', err);
-        return null;
-      }
-    }
+async function doFetch(path, opts){
+  try{
+    const url = API + path;
+    log('FETCH → ' + url + (opts ? ' (options)' : ''));
+    const res = await fetch(url, opts);
+    const text = await res.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch(e){}
+    log(`HTTP ${res.status} ${res.statusText} — body: ${text}`);
+    if (!res.ok) return {ok:false, status:res.status, body:text, json};
+    return {ok:true, status:res.status, body:text, json};
+  }catch(err){
+    log('FETCH ERROR: ' + String(err));
+    return {ok:false, error: String(err)};
+  }
+}
+async function hit(key){
+  setStatus('hitting ' + key + ' ...');
+  const r = await doFetch(`/hit/${encodeURIComponent(NAMESPACE)}/${encodeURIComponent(key)}`);
+  if (!r.ok){ setStatus('error hitting ' + key); return null; }
+  setStatus('hit ' + key + ' OK');
+  return r.json ?? null;
+}
+async function getVal(key){
+  setStatus('getting ' + key + ' ...');
+  const r = await doFetch(`/get/${encodeURIComponent(NAMESPACE)}/${encodeURIComponent(key)}`);
+  if (!r.ok){ setStatus('error getting ' + key); return null; }
+  setStatus('got ' + key + ' OK');
+  return r.json ?? null;
+}
 
-    // Display helpers (safely handle nulls)
-    function show(el, payload) {
-      if (!payload || typeof payload.value === 'undefined') el.textContent = '—';
-      else el.textContent = String(payload.value);
-    }
+function show(el, payload){
+  if (!payload || typeof payload.value === 'undefined') el.textContent = '—';
+  else el.textContent = String(payload.value);
+}
 
-    // Increment visit when page loads (counts every full page request)
-    async function recordVisit() {
-      // Increment visits and total so total = visits + clicks (assuming clicks also increment total)
-      const v = await hit(KEY_VISITS);
-      show(visitsEl, v);
-      const t = await hit(KEY_TOTAL);
-      show(totalEl, t);
-    }
+async function recordVisit(){
+  setStatus('recording visit (increments visits & total)');
+  const v = await hit(KEY_V);
+  show(visitsEl, v);
+  const t = await hit(KEY_T);
+  show(totalEl, t);
+}
+async function recordClick(){
+  bigBtn.disabled = true;
+  bigBtn.textContent = '…';
+  const c = await hit(KEY_C);
+  show(clicksEl, c);
+  const t = await hit(KEY_T);
+  show(totalEl, t);
+  bigBtn.textContent = 'CLICK ME';
+  bigBtn.disabled = false;
+}
+async function refreshAll(){
+  setStatus('refreshing values (no increments)');
+  const [v,c,t] = await Promise.all([getVal(KEY_V), getVal(KEY_C), getVal(KEY_T)]);
+  show(visitsEl, v);
+  show(clicksEl, c);
+  show(totalEl, t);
+  setStatus('refreshed');
+}
 
-    // Handle click increments
-    async function recordClick() {
-      bigBtn.disabled = true;
-      bigBtn.textContent = '…';
-      const c = await hit(KEY_CLICKS);
-      show(clicksEl, c);
-      const t = await hit(KEY_TOTAL);
-      show(totalEl, t);
-      bigBtn.textContent = 'CLICK ME';
-      bigBtn.disabled = false;
-    }
+bigBtn.addEventListener('click', recordClick);
+refBtn.addEventListener('click', refreshAll);
 
-    // Pull current counts (no increments)
-    async function refreshCounts() {
-      const [v,c,t] = await Promise.all([
-        getVal(KEY_VISITS),
-        getVal(KEY_CLICKS),
-        getVal(KEY_TOTAL)
-      ]);
-      show(visitsEl, v);
-      show(clicksEl, c);
-      show(totalEl, t);
-    }
-
-    // Wire events
-    bigBtn.addEventListener('click', recordClick);
-    refresh.addEventListener('click', refreshCounts);
-
-    // Start: record the page visit, then start auto-refresh loop
-    (async function init(){
-      // If you want to disable the automatic increment on load (e.g., for dev), comment out the next line.
-      await recordVisit();
-      // then show latest values in case any were missed
-      await refreshCounts();
-      setInterval(refreshCounts, 4000);
-    })();
-  </script>
+(async function init(){
+  log('INIT — NAMESPACE: ' + NAMESPACE);
+  // Try to increment visits on load (comment out if you don't want an automatic increment)
+  const servingFromFile = location.protocol === 'file:';
+  if (servingFromFile){
+    setStatus('Serving from file:// — fetch may be blocked; try a local HTTP server.');
+    log('Detected file:// — consider running: python -m http.server 8000');
+  }
+  await recordVisit();
+  await refreshAll();
+  setInterval(refreshAll, 4000);
+})();
+</script>
 </body>
 </html>
+
