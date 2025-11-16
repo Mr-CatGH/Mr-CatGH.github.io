@@ -1,140 +1,27 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Debug Counter (Visits · Clicks · Total)</title>
-<style>
-  body{font-family:Inter,system-ui,Arial;margin:24px;background:#071426;color:#edf2f7}
-  .card{background:#071830;padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);max-width:900px}
-  .grid{display:flex;gap:12px;margin:12px 0}
-  .box{flex:1;padding:12px;background:rgba(255,255,255,0.01);border-radius:8px;text-align:center}
-  .value{font-weight:700;font-size:28px;margin-top:8px}
-  button{padding:10px 14px;border-radius:8px;border:none;background:#60a5fa;color:#04233b;font-weight:700;cursor:pointer}
-  .sec{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#9aa4b2}
-  .status{margin-top:12px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.02);color:#9aa4b2;font-size:13px}
-  pre{white-space:pre-wrap;color:#cbd5e1}
-</style>
+    <meta charset="UTF-8">
+    <title>Counter Page</title>
 </head>
 <body>
-  <div class="card">
-    <h2>Debug Counter (Visits · Clicks · Total)</h2>
-    <p style="color:#9aa4b2;margin:0">This version shows status & HTTP response details to help debug why CountAPI calls fail.</p>
+    <h1>Visitor Counter</h1>
+    <p>Counter: <span id="counter">Loading...</span></p>
+    <button id="incrementBtn">Click Me!</button>
 
-    <div class="grid" style="margin-top:14px">
-      <div class="box"><div class="label">Visits</div><div id="visits" class="value">—</div></div>
-      <div class="box"><div class="label">Clicks</div><div id="clicks" class="value">—</div></div>
-      <div class="box"><div class="label">Total</div><div id="total" class="value">—</div></div>
-    </div>
+    <script>
+        async function updateCounter() {
+            const response = await fetch('/increment');
+            const data = await response.json();
+            document.getElementById('counter').textContent = data.counter;
+        }
 
-    <div style="display:flex;gap:10px;align-items:center">
-      <button id="big">CLICK ME</button>
-      <button id="ref" class="sec">Refresh</button>
-      <div style="margin-left:auto;color:#9aa4b2">Auto-refresh every 4s</div>
-    </div>
+        // Load current counter on page load
+        fetch('/increment') // optional, just to get initial value
+            .then(res => res.json())
+            .then(data => document.getElementById('counter').textContent = data.counter);
 
-    <div class="status" id="status">Status: ready</div>
-    <pre id="console"></pre>
-  </div>
-
-<script>
-const NAMESPACE = 'my-unique-namespace'; // change this to a unique string
-const KEY_V = 'visits', KEY_C = 'clicks', KEY_T = 'total';
-const API = 'https://api.countapi.xyz';
-
-const visitsEl = document.getElementById('visits');
-const clicksEl = document.getElementById('clicks');
-const totalEl  = document.getElementById('total');
-const statusEl = document.getElementById('status');
-const consoleEl = document.getElementById('console');
-const bigBtn = document.getElementById('big');
-const refBtn = document.getElementById('ref');
-
-function log(msg){
-  console.log(msg);
-  consoleEl.textContent += msg + '\\n';
-  consoleEl.scrollTop = consoleEl.scrollHeight;
-}
-function setStatus(t){ statusEl.textContent = 'Status: ' + t; }
-
-async function doFetch(path, opts){
-  try{
-    const url = API + path;
-    log('FETCH → ' + url + (opts ? ' (options)' : ''));
-    const res = await fetch(url, opts);
-    const text = await res.text();
-    let json = null;
-    try { json = JSON.parse(text); } catch(e){}
-    log(`HTTP ${res.status} ${res.statusText} — body: ${text}`);
-    if (!res.ok) return {ok:false, status:res.status, body:text, json};
-    return {ok:true, status:res.status, body:text, json};
-  }catch(err){
-    log('FETCH ERROR: ' + String(err));
-    return {ok:false, error: String(err)};
-  }
-}
-async function hit(key){
-  setStatus('hitting ' + key + ' ...');
-  const r = await doFetch(`/hit/${encodeURIComponent(NAMESPACE)}/${encodeURIComponent(key)}`);
-  if (!r.ok){ setStatus('error hitting ' + key); return null; }
-  setStatus('hit ' + key + ' OK');
-  return r.json ?? null;
-}
-async function getVal(key){
-  setStatus('getting ' + key + ' ...');
-  const r = await doFetch(`/get/${encodeURIComponent(NAMESPACE)}/${encodeURIComponent(key)}`);
-  if (!r.ok){ setStatus('error getting ' + key); return null; }
-  setStatus('got ' + key + ' OK');
-  return r.json ?? null;
-}
-
-function show(el, payload){
-  if (!payload || typeof payload.value === 'undefined') el.textContent = '—';
-  else el.textContent = String(payload.value);
-}
-
-async function recordVisit(){
-  setStatus('recording visit (increments visits & total)');
-  const v = await hit(KEY_V);
-  show(visitsEl, v);
-  const t = await hit(KEY_T);
-  show(totalEl, t);
-}
-async function recordClick(){
-  bigBtn.disabled = true;
-  bigBtn.textContent = '…';
-  const c = await hit(KEY_C);
-  show(clicksEl, c);
-  const t = await hit(KEY_T);
-  show(totalEl, t);
-  bigBtn.textContent = 'CLICK ME';
-  bigBtn.disabled = false;
-}
-async function refreshAll(){
-  setStatus('refreshing values (no increments)');
-  const [v,c,t] = await Promise.all([getVal(KEY_V), getVal(KEY_C), getVal(KEY_T)]);
-  show(visitsEl, v);
-  show(clicksEl, c);
-  show(totalEl, t);
-  setStatus('refreshed');
-}
-
-bigBtn.addEventListener('click', recordClick);
-refBtn.addEventListener('click', refreshAll);
-
-(async function init(){
-  log('INIT — NAMESPACE: ' + NAMESPACE);
-  // Try to increment visits on load (comment out if you don't want an automatic increment)
-  const servingFromFile = location.protocol === 'file:';
-  if (servingFromFile){
-    setStatus('Serving from file:// — fetch may be blocked; try a local HTTP server.');
-    log('Detected file:// — consider running: python -m http.server 8000');
-  }
-  await recordVisit();
-  await refreshAll();
-  setInterval(refreshAll, 4000);
-})();
-</script>
+        document.getElementById('incrementBtn').addEventListener('click', updateCounter);
+    </script>
 </body>
 </html>
-
