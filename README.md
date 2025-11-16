@@ -1,1 +1,3 @@
-I am still working on site bugfixes
+I am rewriting the code
+
+This is made with chatgpt
