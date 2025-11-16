@@ -6,25 +6,25 @@ const app = express();
 const PORT = 3000;
 const COUNTER_FILE = path.join(__dirname, 'counter.txt');
 
-// Read the counter from file, or start at 0
+// Initialize counter
 let counter = 0;
 if (fs.existsSync(COUNTER_FILE)) {
     counter = parseInt(fs.readFileSync(COUNTER_FILE, 'utf8')) || 0;
 }
 
-// Middleware to count page requests
-app.use((req, res, next) => {
+// Increment counter on page load
+app.get('/', (req, res) => {
     counter++;
     fs.writeFileSync(COUNTER_FILE, counter.toString());
-    next();
-});
-
-// Serve static HTML
-app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Endpoint to increase counter when button is clicked
+// Endpoint to get current counter (no increment)
+app.get('/get-counter', (req, res) => {
+    res.json({ counter });
+});
+
+// Endpoint to increment counter (button click)
 app.get('/increment', (req, res) => {
     counter++;
     fs.writeFileSync(COUNTER_FILE, counter.toString());
