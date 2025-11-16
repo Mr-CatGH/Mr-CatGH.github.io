@@ -10,6 +10,7 @@
     <button id="incrementBtn">Click Me!</button>
 
     <script>
+        // Function to update counter on page
         async function updateCounter() {
             const response = await fetch('/increment');
             const data = await response.json();
@@ -17,7 +18,7 @@
         }
 
         // Load current counter on page load
-        fetch('/increment') // optional, just to get initial value
+        fetch('/get-counter')
             .then(res => res.json())
             .then(data => document.getElementById('counter').textContent = data.counter);
 
