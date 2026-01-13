@@ -26,4 +26,3 @@ Third-party components used in this project...
 2) Scratch
    - Copyright (c) 2016, Massachusetts Institute of Technology
    - License: BSD 3-clause style
-   - Files/Modules used: [list files]
