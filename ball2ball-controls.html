@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ball2ball controls</title>
+  <style>
+    :root{
+      --bg:#000000;
+      --dim:#0b0b0b;
+      --text:#cfe8c8; /* soft greenish */
+      --accent:#66d9ef; /* cyan */
+      --key:#ffd86b; /* warm yellow */
+      --muted:#9aa5a1;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+    }
+    html,body{height:100%;}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      display:flex;
+      align-items:flex-start;
+      justify-content:flex-start;
+      padding:36px;
+    }
+    .terminal{
+      background:linear-gradient(180deg,var(--bg),var(--dim));
+      border-radius:6px;
+      padding:20px 24px;
+      box-shadow:0 8px 24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
+      min-width:360px;
+    }
+    pre{margin:0; white-space:pre-wrap; font-size:16px; line-height:1.5}
+    .title{color:var(--accent);}
+    .label{color:var(--muted);} 
+    .value{color:var(--key);}
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <pre>
+<span class="title">ball2ball's controls are as follow:</span>
+<span class="label">movement:</span> <span class="value">arrow keys</span>
+<span class="label">background:</span> <span class="value">B</span>
+<span class="label">colour of balls:</span> <span class="value">click on the balls</span>
+<span class="label">show velocity:</span> <span class="value">2</span>
+    </pre>
+  </div>
+</body>
+</html>
