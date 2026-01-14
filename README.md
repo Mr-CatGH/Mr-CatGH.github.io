@@ -27,7 +27,6 @@ Third-party components used in this project...
    - Copyright (C) 2021-2024 Thomas Weber
    - License: Mozilla Public License, v. 2.0
    - Location: https://packager.turbowarp.org/
-   - Files/Modules used: scaffolding-min.js, [list other relevant files]
 
 2) Scratch
    - Copyright (c) 2016, Massachusetts Institute of Technology
